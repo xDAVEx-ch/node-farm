@@ -1,5 +1,4 @@
 const http = require('http');
-const url = require('url');
 const fs = require('fs');
 
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
@@ -26,9 +25,11 @@ const replaceTemplate = (template, product) => {
 }
 
 const server = http.createServer((req, resp) =>{
-    const pathName = req.url;
+    const baseURL = 'http://' + req.headers.host + '/';
+    const {pathname, searchParams} =  new URL(req.url, baseURL);
+    let output = '';
 
-    switch(pathName){
+    switch(pathname){
 		case '/':
             /*Due to we set content-type to be HTML, any string will be parse to HTML*/
             resp.writeHead(200, {'Content-type': 'text/html'});
@@ -36,7 +37,7 @@ const server = http.createServer((req, resp) =>{
             /*Using map to iterate over array of objects from data.json. Convert result into a long string*/
             const cardsHtml = dataObj.map(element => replaceTemplate(cardTemplate, element)).join('');
             /*Insert string (cards with data.json info) inside overview.html template using replace*/
-            const output = overviewTemplate.replace('{%PRODUCT_CARDS%}', cardsHtml);
+            output = overviewTemplate.replace('{%PRODUCT_CARDS%}', cardsHtml);
 
             /*Print out new string*/
 			resp.end(output);
@@ -45,7 +46,12 @@ const server = http.createServer((req, resp) =>{
 			resp.end('Hellow from OVERVIEW');
 			break;
 		case '/product':
-			resp.end('Hello from PRODUCT');
+            resp.writeHead(200, {'Content-type': 'text/html'});
+
+            const product = dataObj[searchParams.get('id')];
+            output = replaceTemplate(productTemplate, product);
+
+			resp.end(output);
             break;
         case '/api':
             resp.writeHead(200, {'Content-type': 'application/json'});
