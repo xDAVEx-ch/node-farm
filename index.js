@@ -1,9 +1,18 @@
+//First core modules
 const http = require('http');
 const fs = require('fs');
+
+//Second 3-party modules
+const slugify = require('slugify');
+
+//Finally, our own modules
 const {replaceTemplate, getMainView} = require('./modules/utils');
+
 
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const dataObj = JSON.parse(data);
+
+const slugs = dataObj.map( element => slugify(element.productName, {lower: true}));
 
 const productTemplate = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
 
